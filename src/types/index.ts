@@ -3,6 +3,11 @@ export type ApiListResponse = {
 	items: IProduct[];
 };
 
+export type ApiPostResponse = {
+	id: string;
+	total: number;
+};
+
 export enum PAYMENT_METHOD {
 	ONLINE = 'Онлайн',
 	RECEIVED = 'При получении',
@@ -40,11 +45,6 @@ export interface IOrderForm {
 	phone: string;
 }
 
-export interface IAppData {
-	productList: IProduct[];
-	basketList: IProduct[];
-}
-
 export interface AddressForm {
 	payment: PAYMENT_METHOD;
 	address: string;
@@ -63,23 +63,10 @@ export interface ICard {
 	render(): HTMLElement;
 }
 
-export interface IAppDataManager {
-	setProductList(productList: IProduct[]): void;
-	makeOrder(contactsForm: ContactsForm): IOrder;
-	cleanOrder(): void;
-}
-
 export interface ILarekApi {
-	productList(): Promise<ApiListResponse | void>; // todo changed
+	productList(): Promise<ApiListResponse | void>;
 	productItem(id: string): IProduct;
 	submitOrder(order: IOrder): void;
-}
-
-export interface IModal {
-	showModal(): void;
-	hideModal(): void;
-	renderSelectedProduct(productAndClick: IProductAndClick): void;
-	renderContainer(container: HTMLElement): void;
 }
 
 export interface IProductAndClick {

@@ -1,4 +1,4 @@
-import { IProduct, IOrder, ApiListResponse, ILarekApi } from '../types';
+import { IProduct, IOrder, ApiListResponse, ILarekApi, ApiPostResponse } from '../types';
 import { Api } from './base/api';
 
 export class LarekApi extends Api implements ILarekApi {
@@ -14,7 +14,9 @@ export class LarekApi extends Api implements ILarekApi {
 	productItem(id: string): IProduct {
 		throw new Error('Method not implemented.');
 	}
-	submitOrder(order: IOrder): void {
-		throw new Error('Method not implemented.');
+	submitOrder(order: IOrder): Promise<ApiPostResponse | void> {
+		return this.post('/order', order)
+		.then((response: ApiPostResponse) => response)
+		.catch((err) => console.error(err));
 	}
 }

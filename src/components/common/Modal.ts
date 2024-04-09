@@ -1,16 +1,19 @@
-import { IModal } from '../types';
-import { CDN_URL, category } from '../utils/constants';
-import { copyTemplate } from '../utils/utils';
-import { IProductAndClick } from './Card';
-import { IEvents } from './base/events';
+import { CDN_URL, category } from '../../utils/constants';
+import { copyTemplate } from '../../utils/utils';
+import { IProductAndClick } from '../Card';
+import { Component } from '../base/component';
+import { IEvents } from '../base/events';
 
-export class Modal implements IModal {
+export interface IModal {
+	content: HTMLElement;
+}
+
+export class Modal extends Component<IModal> {
 	closeBtn: HTMLButtonElement;
 	_content: HTMLElement;
-	container: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
-		this.container = container;
+		super(container);
 		this.closeBtn = container.getElementsByClassName(
 			'modal__close'
 		)[0] as HTMLButtonElement;
@@ -31,20 +34,23 @@ export class Modal implements IModal {
 			`.card__title`
 		) as HTMLElement;
 		const _price = container.querySelector(`.card__price`) as HTMLSpanElement;
-		const _category = container.querySelector(`.card__category`);
-		const _description = container.querySelector(`.card__text`);
+		const _category = container.querySelector(`.card__category`) as HTMLElement;
+		const _description = container.querySelector(`.card__text`) as HTMLElement;
 		const _img = container.querySelector(`.card__image`) as HTMLImageElement;
 		const _btn = container.querySelector(`.card__button`) as HTMLButtonElement;
 
-		_title.textContent = product.title;
-		_price.textContent =
-			product.price == null ? 'Бесценно' : String(product.price) + ' синапсов';
-		_category.textContent = product.category;
-		_category.classList.toggle(
+		this.setText(_title, product.title);
+		this.setText(
+			_price,
+			product.price == null ? 'Бесценно' : String(product.price) + ' синапсов'
+		);
+		this.setText(_category, product.category);
+		this.toggleClass(
+			_category,
 			'card__category_' + category.get(product.category),
 			true
 		);
-		_description.textContent = product.description;
+		this.setText(_description, product.description);
 		_img.src = CDN_URL + product.image;
 		_img.alt = product.title;
 		_btn.addEventListener('click', productAndClick.onClick.onClick);

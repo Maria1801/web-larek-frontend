@@ -1,26 +1,35 @@
 import {
 	IProduct,
 	IOrder,
-	IAppData,
 	AddressForm,
 	ContactsForm,
-	IAppDataManager,
 } from '../types';
 import { IEvents } from './base/events';
+import { Model } from './base/model';
 
-export class AppDataManager implements IAppDataManager, IAppData {
+export interface IAppDataManager {
+	productList: IProduct[];
+	basketList: IProduct[];
+	setProductList(productList: IProduct[]): void;
+	makeOrder(contactsForm: ContactsForm): IOrder;
+	cleanOrder(): void;
+}
+
+export class AppDataManager extends Model<IAppDataManager> {
 	productList: IProduct[];
 	basketList: IProduct[];
 	addressForm: AddressForm;
 
-	constructor(protected events: IEvents) {
-		this.productList = [];
-		this.basketList = [];
+	constructor(events: IEvents) {
+		super({
+			productList: [],
+			basketList: []
+		}, events);
 	}
 
 	async setProductList(productList: IProduct[]) {
 		this.productList = productList;
-		this.events.emit('productList:changed', { productList: this.productList });
+		this.emitChanges('productList:changed', { productList: this.productList });
 	}
 
 	makeOrder(contactsForm: ContactsForm): IOrder {

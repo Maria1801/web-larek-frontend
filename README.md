@@ -13,7 +13,7 @@
 - src/pages/index.html — HTML-файл главной страницы
 - src/types/index.ts — файл с типами
 - src/index.ts — точка входа приложения
-- src/styles/styles.scss — корневой файл стилей
+- src/scss/styles.scss — корневой файл стилей
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
 
@@ -160,14 +160,17 @@ yarn build
 - Поля:
   - `error` - сообщение об ошибке
   - `container` - элемент контейнера формы
-  - `_button`, `_actions`, `_inputs`, `_paymentButton`, `_submit` - различные элементы формы
-  - `isPaymentSelected` - указывает, выбран ли метод оплаты.
+  - `inputs`, `paymentButton`, `submit` - различные элементы формы
+  - `isPaymentSelected` - указывает, выбран ли метод оплаты
+  - `paymentMethod` - значение способа оплаты
 - Методы:
   - `toggleSelected(button: HTMLElement)` - переключает выбранное состояние кнопки выбора способа оплаты
   - `updateValidation()` - обновляет состояние кнопки отправки формы в зависимости от заполнения формы и выбора способа оплаты
   - `showError(element: HTMLInputElement)` - показывает сообщение об ошибке для конкретного поля ввода
   - `cleanError():` - который очищает сообщение об ошибке
   - `render():` - возвращает контейнер
+
+  ### 5. Класс `FormFinal`
 
 ## Типы
 

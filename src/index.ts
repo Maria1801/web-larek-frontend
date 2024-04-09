@@ -1,14 +1,15 @@
 import { AppDataManager } from './components/AppDataManager';
 import { LarekApi } from './components/LarekAPI';
 import { MainPage } from './components/MainPage';
-import { Modal } from './components/Modal';
+import { Modal } from './components/common/Modal';
 import { EventEmitter } from './components/base/events';
 import './scss/styles.scss';
-import { AddressForm, ApiListResponse, ContactsForm, IProduct } from './types';
+import { AddressForm, ApiListResponse, ApiPostResponse, ContactsForm, IProduct } from './types';
 import { API_URL } from './utils/constants';
 import { Basket } from './components/Basket';
-import { Form } from './components/Form';
+import { Form } from './components/common/Form';
 import { copyTemplate } from './utils/utils';
+import { FormFinal } from './components/FormFinal';
 
 const modalContainer = document.getElementById(
 	'modal-container'
@@ -16,11 +17,12 @@ const modalContainer = document.getElementById(
 const basketEl = copyTemplate('basket');
 const orderEl = copyTemplate('order');
 const contactsEl = copyTemplate('contacts');
+const successEl = copyTemplate('success');
 
 const events = new EventEmitter();
 const larekApi = new LarekApi(API_URL);
 
-const page = new MainPage(document.body, events);
+const page = new MainPage(events);
 const modal = new Modal(modalContainer, events);
 const basket = new Basket(basketEl, events);
 const formAddress = new Form(orderEl, events);
@@ -52,10 +54,16 @@ events.on('card:select', (product: IProduct) => {
 
 events.on('basket:render', () => {
 	modal.renderContainer(basket.container);
+	// modal.render({
+	// 	content: basket.render()
+	// });
+	// console.log(basket.render())
 });
 
 events.on('basket:buy', (product: IProduct) => {
-	appDataManager.basketList.push(product);
+	if (!appDataManager.basketList.includes(product)){
+		appDataManager.basketList.push(product);
+	}
 	basket.renderCounter(appDataManager.basketList.length);
 	basket.updateList(appDataManager.basketList);
 });
@@ -80,6 +88,26 @@ events.on('order:contacts', (values: AddressForm) => {
 
 events.on('order:post', (values: ContactsForm) => {
 	const order = appDataManager.makeOrder(values);
+	const success = new FormFinal(successEl, { 
+		onClick: () => {
+			modal.hideModal();
+			appDataManager.cleanOrder();
+			basket.renderCounter(appDataManager.basketList.length);
+			basket.updateList(appDataManager.basketList);
+		}
+	});
+
+	success.setTotal(order.total);
+	modal.renderContainer(success.render());
+
+	larekApi.submitOrder(order)
+		.then((response: ApiPostResponse) => {
+			success.setTotal(response.total);
+		})
+		.catch((err) => {
+			console.error(err);
+			success.setTotal(0);
+		});
 });
 
 larekApi

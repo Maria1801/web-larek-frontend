@@ -1,14 +1,16 @@
 import { IProduct } from '../types';
-import { copyTemplate } from '../utils/utils';
+import { copyTemplate, ensureElement } from '../utils/utils';
 import { Card } from './Card';
+import { Component } from './base/component';
 import { EventEmitter } from './base/events';
 
 export interface IBasket {
-	renderCounter(amount: number): void;
-	updateList(productList: IProduct[]): void;
+	_list: HTMLElement;
+	_price: HTMLElement;
+	_button: HTMLButtonElement;
 }
 
-export class Basket implements IBasket {
+export class Basket extends Component<IBasket> {
 	protected _counter: HTMLElement;
 	protected _list: HTMLElement;
 	protected _price: HTMLElement;
@@ -16,19 +18,18 @@ export class Basket implements IBasket {
 	container: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: EventEmitter) {
+		super(container);
 		this.container = container;
+
 		this._counter = document.getElementsByClassName(
 			'header__basket-counter'
 		)[0] as HTMLElement;
-		this._list = container.getElementsByClassName(
-			'basket__list'
-		)[0] as HTMLElement;
-		this._price = container.getElementsByClassName(
-			'basket__price'
-		)[0] as HTMLElement;
-		this._button = container.getElementsByClassName(
-			'basket__button'
-		)[0] as HTMLButtonElement;
+		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
+		this._price = ensureElement<HTMLElement>('.basket__price', this.container);
+		this._button = ensureElement<HTMLButtonElement>(
+			'.basket__button',
+			this.container
+		);
 
 		this._button.disabled = true;
 		if (this._button) {
@@ -39,39 +40,33 @@ export class Basket implements IBasket {
 	}
 
 	renderCounter(amount: number): void {
-		this._counter.textContent = String(amount);
+		this.setText(this._counter, amount);
 	}
 	updateList(productList: IProduct[]): void {
 		if (productList.length > 0) {
-			this._button.disabled = false;
+			this.setDisabled(this._button, false);
 		} else {
-			this._button.disabled = true;
+			this.setDisabled(this._button, true);
 		}
 
 		let totalPrice = 0;
 		productList.map((product) => {
 			totalPrice += product.price;
 		});
-		this._price.textContent = String(totalPrice) + ' синапсов';
 
+		this.setText(this._price, String(totalPrice) + ' синапсов');
 		const cards: HTMLElement[] = productList.map((product, index) => {
 			const copy = copyTemplate('card-basket');
-			const card = new Card(
-				copy as HTMLElement,
-				{
-					product: product,
-					onClick: {
-						onClick: (event: MouseEvent) => {
-							this.events.emit('basket:delete', product);
-						},
+			const card = new Card(copy as HTMLElement, {
+				product: product,
+				onClick: {
+					onClick: (event: MouseEvent) => {
+						this.events.emit('basket:delete', product);
 					},
 				},
-				this.events
-			);
+			});
 			const _card: HTMLElement = card.render();
-			_card.querySelector('.basket__item-index').textContent = String(
-				index + 1
-			);
+			this.setText(_card.querySelector('.basket__item-index'), index + 1);
 			return _card;
 		});
 
