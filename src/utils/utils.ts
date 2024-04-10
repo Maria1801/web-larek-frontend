@@ -3,10 +3,6 @@ export function copyTemplate(id: string): HTMLElement {
     return template.content.firstElementChild.cloneNode(true) as HTMLElement;
 }
 
-export function pascalToKebab(value: string): string {
-    return value.replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
-}
-
 export function isSelector(x: any): x is string {
     return (typeof x === "string") && x.length > 1;
 }
@@ -62,26 +58,6 @@ export function cloneTemplate<T extends HTMLElement>(query: string | HTMLTemplat
     return template.content.firstElementChild.cloneNode(true) as T;
 }
 
-export function bem(block: string, element?: string, modifier?: string): { name: string, class: string } {
-    let name = block;
-    if (element) name += `__${element}`;
-    if (modifier) name += `_${modifier}`;
-    return {
-        name,
-        class: `.${name}`
-    };
-}
-
-export function getObjectProperties(obj: object, filter?: (name: string, prop: PropertyDescriptor) => boolean): string[] {
-    return Object.entries(
-        Object.getOwnPropertyDescriptors(
-            Object.getPrototypeOf(obj)
-        )
-    )
-        .filter(([name, prop]: [string, PropertyDescriptor]) => filter ? filter(name, prop) : (name !== 'constructor'))
-        .map(([name, prop]) => name);
-}
-
 /**
  * Устанавливает dataset атрибуты элемента
  */
@@ -89,17 +65,6 @@ export function setElementData<T extends Record<string, unknown> | object>(el: H
     for (const key in data) {
         el.dataset[key] = String(data[key]);
     }
-}
-
-/**
- * Получает типизированные данные из dataset атрибутов элемента
- */
-export function getElementData<T extends Record<string, unknown>>(el: HTMLElement, scheme: Record<string, Function>): T {
-    const data: Partial<T> = {};
-    for (const key in el.dataset) {
-        data[key as keyof T] = scheme[key](el.dataset[key]);
-    }
-    return data as T;
 }
 
 /**

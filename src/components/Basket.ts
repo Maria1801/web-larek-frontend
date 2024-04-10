@@ -1,29 +1,21 @@
 import { IProduct } from '../types';
-import { copyTemplate, ensureElement } from '../utils/utils';
+import { cloneTemplate, ensureElement } from '../utils/utils';
 import { Card } from './Card';
 import { Component } from './base/component';
 import { EventEmitter } from './base/events';
 
 export interface IBasket {
-	_list: HTMLElement;
-	_price: HTMLElement;
-	_button: HTMLButtonElement;
+	list: IProduct[];
 }
 
 export class Basket extends Component<IBasket> {
-	protected _counter: HTMLElement;
-	protected _list: HTMLElement;
-	protected _price: HTMLElement;
-	protected _button: HTMLButtonElement;
-	container: HTMLElement;
+	private _list: HTMLElement;
+	private _price: HTMLElement;
+	private _button: HTMLButtonElement;
 
 	constructor(container: HTMLElement, protected events: EventEmitter) {
 		super(container);
-		this.container = container;
 
-		this._counter = document.getElementsByClassName(
-			'header__basket-counter'
-		)[0] as HTMLElement;
 		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
 		this._price = ensureElement<HTMLElement>('.basket__price', this.container);
 		this._button = ensureElement<HTMLButtonElement>(
@@ -39,37 +31,38 @@ export class Basket extends Component<IBasket> {
 		}
 	}
 
-	renderCounter(amount: number): void {
-		this.setText(this._counter, amount);
-	}
-	updateList(productList: IProduct[]): void {
+	set list(productList: IProduct[]) {
 		if (productList.length > 0) {
 			this.setDisabled(this._button, false);
 		} else {
 			this.setDisabled(this._button, true);
 		}
 
-		let totalPrice = 0;
-		productList.map((product) => {
-			totalPrice += product.price;
-		});
-
-		this.setText(this._price, String(totalPrice) + ' синапсов');
 		const cards: HTMLElement[] = productList.map((product, index) => {
-			const copy = copyTemplate('card-basket');
-			const card = new Card(copy as HTMLElement, {
+			const cardBasket = new Card(
+				cloneTemplate<HTMLTemplateElement>('#card-basket')
+			);
+			const cardEl = cardBasket.render({
 				product: product,
-				onClick: {
+				handler: {
 					onClick: (event: MouseEvent) => {
 						this.events.emit('basket:delete', product);
 					},
 				},
 			});
-			const _card: HTMLElement = card.render();
-			this.setText(_card.querySelector('.basket__item-index'), index + 1);
-			return _card;
+			this.setText(cardEl.querySelector('.basket__item-index'), index + 1);
+			return cardEl;
 		});
 
 		this._list.replaceChildren(...cards);
+		this.price = productList;
+	}
+
+	set price(productList: IProduct[]) {
+		let totalPrice = 0;
+		productList.map((product) => {
+			totalPrice += product.price;
+		});
+		this.setText(this._price, String(totalPrice) + ' синапсов');
 	}
 }

@@ -1,29 +1,49 @@
-import { copyTemplate, ensureElement } from '../utils/utils';
-import { Card, IProductAndClick } from './Card';
+import { IProduct } from '../types';
+import { cloneTemplate, ensureElement } from '../utils/utils';
+import { Card } from './Card';
+import { Component } from './base/component';
 import { IEvents } from './base/events';
 
-export class MainPage {
-	protected _catalog: HTMLElement;
-	protected _basket: HTMLElement;
-	// protected _counter: HTMLElement;
+export interface IMainPage {
+	counter: number;
+	catalog: IProduct[];
+}
 
-	constructor(protected events: IEvents) {
+export class MainPage extends Component<IMainPage> {
+	private _catalog: HTMLElement;
+	private _counter: HTMLElement;
+
+	constructor(container: HTMLElement, protected events: IEvents) {
+		super(container);
+
 		this._catalog = ensureElement<HTMLElement>('.gallery');
-		this._basket = this._basket = ensureElement<HTMLElement>('.header__basket');
-		// this._counter = ensureElement<HTMLElement>('header__basket-counter');
+		this._counter = ensureElement<HTMLElement>('.header__basket-counter');
+		const _basket = ensureElement<HTMLElement>('.header__basket');
 
-		this._basket.addEventListener('click', () => {
+		_basket.addEventListener('click', () => {
 			this.events.emit('basket:render');
 		});
 	}
 
-	set catalog(products: IProductAndClick[]) {
-		const cards: HTMLElement[] = products.map((productAndClick) => {
-			const copy = copyTemplate('card-catalog');
-			const card = new Card(copy as HTMLElement, productAndClick);
-			return card.render();
+	set catalog(productList: IProduct[]) {
+		const cards = productList.map((product) => {
+			const cardCatalog = new Card(
+				cloneTemplate<HTMLTemplateElement>('#card-catalog')
+			);
+			return cardCatalog.render({
+				product: product,
+				handler: {
+					onClick: () => {
+						this.events.emit('card:select', product);
+					},
+				},
+			});
 		});
 
 		this._catalog.replaceChildren(...cards);
+	}
+
+	set counter(count: number) {
+		this.setText(this._counter, count);
 	}
 }

@@ -1,50 +1,61 @@
-import { IProduct, IClickHandler, ICard } from '../types';
+import { IProduct, IClickHandler } from '../types';
 import { CDN_URL, category } from '../utils/constants';
 import { ensureElement } from '../utils/utils';
 import { Component } from './base/component';
 
-export interface IProductAndClick {
+export interface ICard {
 	product: IProduct;
-	onClick: IClickHandler;
+	handler: IClickHandler;
 }
 
 export class Card extends Component<ICard> {
-	product: IProduct;
 	private _price: HTMLElement;
+	private _title: HTMLElement;
+	private _category: HTMLElement;
+	private _img: HTMLImageElement;
+	private _btn: HTMLButtonElement;
+	private _description: HTMLElement;
 
-	constructor(container: HTMLElement, productAndClick: IProductAndClick) {
+	constructor(container: HTMLElement) {
 		super(container);
 
-		const product = productAndClick.product;
-		this.product = product;
-
-		const _title = ensureElement<HTMLElement>('.card__title', this.container);
 		this._price = ensureElement<HTMLElement>('.card__price', this.container);
-		const _category: HTMLElement = container.querySelector(`.card__category`);
-		const _img = container.querySelector(`.card__image`) as HTMLImageElement;
+		this._title = ensureElement<HTMLElement>('.card__title', this.container);
+		this._category = container.querySelector(`.card__category`);
+		this._img = container.querySelector(`.card__image`) as HTMLImageElement;
+		this._btn = container.querySelector(`.card__button`) as HTMLButtonElement;
+		this._description = container.querySelector(`.card__text`) as HTMLElement;
+	}
 
-		this.setText(_title, product.title);
+	set product(product: IProduct) {
+		this.setText(this._title, product.title);
 		this.setText(
 			this._price,
 			product.price == null ? 'Бесценно' : String(product.price) + ' синапсов'
 		);
 
-		if (_category !== null) {
-			this.setText(_category, product.category);
+		if (this._category !== null) {
+			this.setText(this._category, product.category);
 			this.toggleClass(
-				_category,
+				this._category,
 				'card__category_' + category.get(product.category),
 				true
 			);
 		}
-		if (_img !== null) {
-			_img.src = CDN_URL + product.image;
-			_img.alt = product.title;
+		if (this._img !== null) {
+			this._img.src = CDN_URL + product.image;
+			this._img.alt = product.title;
 		}
-		this.container.addEventListener('click', productAndClick.onClick.onClick);
+		if (this._description !== null && this._btn !== null) {
+			this.setText(this._description, product.description);
+		}
 	}
 
-	render(): HTMLElement {
-		return this.container;
+	set handler(handler: IClickHandler) {
+		if (this._description !== null && this._btn !== null) {
+			this._btn.addEventListener('click', handler.onClick);
+		} else {
+			this.container.addEventListener('click', handler.onClick);
+		}
 	}
 }

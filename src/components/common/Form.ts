@@ -4,18 +4,21 @@ import { Component } from '../base/component';
 import { IEvents } from '../base/events';
 
 export class Form extends Component<IForm> {
-	protected error: HTMLElement;
-	protected isPaymentSelected: boolean;
-	protected inputs: HTMLInputElement[];
-	protected paymentButtons: HTMLElement[];
-	protected submit: HTMLButtonElement;
-	protected paymentMethod: PAYMENT_METHOD;
+	private error: HTMLElement;
+	private isPaymentSelected: boolean;
+	private inputs: HTMLInputElement[];
+	private paymentButtons: HTMLElement[];
+	private submit: HTMLButtonElement;
+	private paymentMethod: PAYMENT_METHOD;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
 		this.inputs = Array.from(this.container.querySelectorAll('.form__input'));
-		this.submit = ensureElement<HTMLButtonElement>('.button[type=submit]', this.container);
+		this.submit = ensureElement<HTMLButtonElement>(
+			'.button[type=submit]',
+			this.container
+		);
 		this.error = ensureElement<HTMLElement>('.form__errors', this.container);
 
 		this.paymentButtons = Array.prototype.slice.call(
@@ -98,20 +101,16 @@ export class Form extends Component<IForm> {
 			this.cleanError();
 		} else {
 			if (element.validity.patternMismatch) {
-				this.setText(this.error, element.dataset.errorMessage )
+				this.setText(this.error, element.dataset.errorMessage);
 			} else {
-				this.setText(this.error, element.validationMessage )
+				this.setText(this.error, element.validationMessage);
 			}
 			this.error.style.removeProperty('display');
 		}
 	}
 
 	cleanError() {
-		this.setText(this.error, '' )
+		this.setText(this.error, '');
 		this.setHidden(this.error);
-	}
-
-	render() {
-		return this.container;
 	}
 }

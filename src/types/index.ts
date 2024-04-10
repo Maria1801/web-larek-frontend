@@ -14,7 +14,6 @@ export enum PAYMENT_METHOD {
 }
 
 export interface IForm {
-	render(): HTMLElement;
 	updateValidation(): void;
 	toggleSelected(button: HTMLElement): void;
 	showError(element: HTMLInputElement): void;
@@ -59,13 +58,9 @@ export interface IClickHandler {
 	onClick: (event: MouseEvent) => void;
 }
 
-export interface ICard {
-	render(): HTMLElement;
-}
-
 export interface ILarekApi {
 	productList(): Promise<ApiListResponse | void>;
-	productItem(id: string): IProduct;
+	productItem(id: string): Promise<IProduct | void>;
 	submitOrder(order: IOrder): void;
 }
 
