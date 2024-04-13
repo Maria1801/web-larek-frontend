@@ -6,6 +6,8 @@ import { Component } from './base/component';
 export interface ICard {
 	product: IProduct;
 	handler: IClickHandler;
+	isAlreadyInBasket: boolean;
+	index: number;
 }
 
 export class Card extends Component<ICard> {
@@ -15,6 +17,7 @@ export class Card extends Component<ICard> {
 	private _img: HTMLImageElement;
 	private _btn: HTMLButtonElement;
 	private _description: HTMLElement;
+	private _index: HTMLElement;
 
 	constructor(container: HTMLElement) {
 		super(container);
@@ -25,6 +28,7 @@ export class Card extends Component<ICard> {
 		this._img = container.querySelector(`.card__image`) as HTMLImageElement;
 		this._btn = container.querySelector(`.card__button`) as HTMLButtonElement;
 		this._description = container.querySelector(`.card__text`) as HTMLElement;
+		this._index = container.querySelector(`.basket__item-index`) as HTMLElement;
 	}
 
 	set product(product: IProduct) {
@@ -43,8 +47,7 @@ export class Card extends Component<ICard> {
 			);
 		}
 		if (this._img !== null) {
-			this._img.src = CDN_URL + product.image;
-			this._img.alt = product.title;
+			this.setImage(this._img, CDN_URL + product.image, product.title);
 		}
 		if (this._description !== null && this._btn !== null) {
 			this.setText(this._description, product.description);
@@ -57,5 +60,16 @@ export class Card extends Component<ICard> {
 		} else {
 			this.container.addEventListener('click', handler.onClick);
 		}
+	}
+
+	set isAlreadyInBasket(flag: boolean) {
+		if (flag){
+			this.setDisabled(this._btn, true);
+			this.setText(this._btn, "Уже в корзине");
+		}
+	}
+
+	set index(i: number) {
+		this.setText(this._index, i)
 	}
 }

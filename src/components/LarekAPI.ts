@@ -14,17 +14,14 @@ export class LarekApi extends Api implements ILarekApi {
 
 	productList(): Promise<ApiListResponse | void> {
 		return this.get('/product')
-			.then((data: ApiListResponse) => data)
-			.catch((err) => console.error(err));
+			.then((data: ApiListResponse) => data);
 	}
 	productItem(id: string): Promise<IProduct | void> {
 		return this.get('/product/'+ id)
-		.then((data: IProduct) => data)
-		.catch((err) => console.error(err));
+		.then((data: IProduct) => data);
 	}
 	submitOrder(order: IOrder): Promise<ApiPostResponse | void> {
 		return this.post('/order', order)
-			.then((response: ApiPostResponse) => response)
-			.catch((err) => console.error(err));
+			.then((response: ApiPostResponse) => response);
 	}
 }

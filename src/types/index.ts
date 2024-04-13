@@ -13,6 +13,8 @@ export enum PAYMENT_METHOD {
 	RECEIVED = 'При получении',
 }
 
+export type FormErrors = Partial<Record<keyof IOrder, string>>;
+
 export interface IForm {
 	updateValidation(): void;
 	toggleSelected(button: HTMLElement): void;
@@ -20,13 +22,15 @@ export interface IForm {
 	cleanError(): void;
 }
 
+export type ProductPrice = number | null;
+
 export interface IProduct {
 	id: string;
 	description: string;
 	image: string;
 	title: string;
 	category: string;
-	price: number;
+	price: ProductPrice;
 }
 
 export interface IOrder {
@@ -44,10 +48,7 @@ export interface IOrderForm {
 	phone: string;
 }
 
-export interface AddressForm {
-	payment: PAYMENT_METHOD;
-	address: string;
-}
+
 
 export interface ContactsForm {
 	email: string;

@@ -32,8 +32,20 @@ export class Basket extends Component<IBasket> {
 	}
 
 	set list(productList: IProduct[]) {
+		let isPriceCorrect = true;
+		productList.forEach((product) => {
+			if (product.price == null) {
+				isPriceCorrect = false;
+			}
+		});
 		if (productList.length > 0) {
-			this.setDisabled(this._button, false);
+			if (!isPriceCorrect) {
+				this.setDisabled(this._button, true);
+				this.setText(this._button, 'Нельзя купить');
+			} else {
+				this.setDisabled(this._button, false);
+				this.setText(this._button, 'Оформить');
+			}
 		} else {
 			this.setDisabled(this._button, true);
 		}
@@ -44,13 +56,13 @@ export class Basket extends Component<IBasket> {
 			);
 			const cardEl = cardBasket.render({
 				product: product,
+				index: index + 1,
 				handler: {
 					onClick: (event: MouseEvent) => {
 						this.events.emit('basket:delete', product);
 					},
 				},
 			});
-			this.setText(cardEl.querySelector('.basket__item-index'), index + 1);
 			return cardEl;
 		});
 

@@ -5,25 +5,26 @@ import { Modal } from './components/common/Modal';
 import { EventEmitter } from './components/base/events';
 import './scss/styles.scss';
 import {
-	AddressForm,
 	ApiListResponse,
 	ApiPostResponse,
-	ContactsForm,
+	IOrderForm,
 	IProduct,
+	PAYMENT_METHOD,
 } from './types';
 import { API_URL } from './utils/constants';
 import { Basket } from './components/Basket';
-import { Form } from './components/common/Form';
-import { FormFinal } from './components/FormFinal';
 import { Card } from './components/Card';
 import { cloneTemplate } from './utils/utils';
+import { Contacts } from './components/ContanctsForm';
+import { OrderForm } from './components/OrderForm';
+import { Success } from './components/Success';
 
 const modalContainer = document.getElementById(
 	'modal-container'
 ) as HTMLElement;
 const basketEl = cloneTemplate<HTMLTemplateElement>('#basket');
-const orderEl = cloneTemplate<HTMLTemplateElement>('#order');
-const contactsEl = cloneTemplate<HTMLTemplateElement>('#contacts');
+const orderFormEl = cloneTemplate<HTMLFormElement>('#order');
+const contactsFormEl = cloneTemplate<HTMLFormElement>('#contacts');
 const successEl = cloneTemplate<HTMLTemplateElement>('#success');
 
 const events = new EventEmitter();
@@ -32,8 +33,8 @@ const larekApi = new LarekApi(API_URL);
 const page = new MainPage(document.body, events);
 const modal = new Modal(modalContainer, events);
 const basket = new Basket(basketEl, events);
-const formAddress = new Form(orderEl, events);
-const formContacts = new Form(contactsEl, events);
+const formAddress = new OrderForm(orderFormEl, events);
+const formContacts = new Contacts(contactsFormEl, events);
 const appDataManager = new AppDataManager(events);
 
 events.on('productList:changed', () => {
@@ -50,6 +51,7 @@ events.on('card:select', (product: IProduct) => {
 	modal.render({
 		content: selectedCard.render({
 			product: product,
+			isAlreadyInBasket: appDataManager.isProductInBasket(product),
 			handler: {
 				onClick: () => {
 					modal.hideModal();
@@ -89,29 +91,66 @@ events.on('basket:delete', (product: IProduct) => {
 
 events.on('order:init', () => {
 	modal.render({
-		content: formAddress.render(),
+		content: formAddress.render({
+			payment: '',
+			address: '',
+			valid: false,
+			errors: ['Выберете способ оплаты и адресс']
+		}),
 	});
 });
 
-events.on('order:contacts', (values: AddressForm) => {
-	appDataManager.addressForm = values;
-	modal.render({
-		content: formContacts.render(),
-	});
+events.on('payment:change', (item: HTMLButtonElement) => {
+	if (item.name === 'cash') {
+		appDataManager.order.payment = PAYMENT_METHOD.RECEIVED;
+	} else if (item.name === 'card') {
+		appDataManager.order.payment = PAYMENT_METHOD.ONLINE;
+	}
+	formAddress.checkErrors(appDataManager.order);
+	formAddress.valid = appDataManager.isValidContactsForm();
+})
+
+events.on('order.address:change', (data: { field: keyof IOrderForm, value: string }) => {
+    appDataManager.order.address = data.value;
+	formAddress.checkErrors(appDataManager.order);
+	formAddress.valid = appDataManager.isValidContactsForm();
+  });
+
+
+events.on('order:submit', () => {
+    modal.render({
+      content: formContacts.render({
+        email: '',
+        phone: '',
+        valid: false,
+        errors: ['Введите email и телефон']
+      })
+    });
+})
+
+events.on('contacts.email:change', (data: { field: keyof IOrderForm, value: string }) => {
+    appDataManager.order.email = data.value;
+	formContacts.checkErrors(appDataManager.order);
+	formContacts.valid = appDataManager.isValidAddressForm();
 });
 
-events.on('order:post', (values: ContactsForm) => {
-	const order = appDataManager.makeOrder(values);
-	const success = new FormFinal(successEl, {
+events.on('contacts.phone:change', (data: { field: keyof IOrderForm, value: string }) => {
+    appDataManager.order.phone = data.value;
+	formContacts.checkErrors(appDataManager.order);
+	formContacts.valid = appDataManager.isValidAddressForm();
+});
+
+events.on('contacts:submit', () => {
+	const order = appDataManager.makeOrder();
+	const success = new Success(successEl, {
 		onClick: () => {
 			modal.hideModal();
-
 		},
 	});
 
 	modal.render({
 		content: success.render({
-			total: order.total,
+			total: String(order.total + ' синапсов')
 		}),
 	});
 	page.render({
@@ -123,7 +162,7 @@ events.on('order:post', (values: ContactsForm) => {
 		.then((response: ApiPostResponse) => {
 			modal.render({
 				content: success.render({
-					total: response.total,
+					total: String(response.total + ' синапсов'),
 				}),
 			});
 		})
@@ -131,10 +170,18 @@ events.on('order:post', (values: ContactsForm) => {
 			console.error(err);
 			modal.render({
 				content: success.render({
-					total: 0,
+					total: 'Что-то пошло не так',
 				}),
 			});
 		});
+});
+
+events.on('modal:open', () => {
+    page.locked = true;
+});
+
+events.on('modal:close', () => {
+    page.locked = false;
 });
 
 larekApi

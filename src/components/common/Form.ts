@@ -1,116 +1,54 @@
-import { PAYMENT_METHOD, IForm } from '../../types';
-import { ensureElement } from '../../utils/utils';
-import { Component } from '../base/component';
-import { IEvents } from '../base/events';
+import {IEvents} from "../base/events";
+import {ensureElement} from "../../utils/utils";
+import { Component } from "../base/component";
 
-export class Form extends Component<IForm> {
-	private error: HTMLElement;
-	private isPaymentSelected: boolean;
-	private inputs: HTMLInputElement[];
-	private paymentButtons: HTMLElement[];
-	private submit: HTMLButtonElement;
-	private paymentMethod: PAYMENT_METHOD;
+interface IFormState {
+    valid: boolean;
+    errors: string[];
+}
 
-	constructor(container: HTMLElement, protected events: IEvents) {
-		super(container);
+export abstract class Form<T> extends Component<IFormState> {
+    protected _submit: HTMLButtonElement;
+    protected _errors: HTMLElement;
 
-		this.inputs = Array.from(this.container.querySelectorAll('.form__input'));
-		this.submit = ensureElement<HTMLButtonElement>(
-			'.button[type=submit]',
-			this.container
-		);
-		this.error = ensureElement<HTMLElement>('.form__errors', this.container);
+    constructor(protected container: HTMLFormElement, protected events: IEvents) {
+        super(container);
 
-		this.paymentButtons = Array.prototype.slice.call(
-			container.getElementsByClassName('button_alt')
-		);
-		this.cleanError();
+        this._submit = ensureElement<HTMLButtonElement>('button[type=submit]', this.container);
+        this._errors = ensureElement<HTMLElement>('.form__errors', this.container);
 
-		if (this.submit.classList.contains('order__button')) {
-			this.submit.addEventListener('click', () => {
-				const address = this.inputs[0].value;
-				const payment = this.paymentMethod;
-				events.emit('order:contacts', {
-					payment: payment,
-					address: address,
-				});
-			});
-		} else {
-			this.submit.addEventListener('click', () => {
-				const email = this.inputs[0].value;
-				const telephone = this.inputs[1].value;
-				events.emit('order:post', {
-					email: email,
-					telephone: telephone,
-				});
-			});
-		}
+        this.container.addEventListener('input', (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            const field = target.name as keyof T;
+            const value = target.value;
+            this.onInputChange(field, value);
+        });
 
-		if (this.paymentButtons.length != 0) {
-			this.isPaymentSelected = false;
-			this.paymentButtons.forEach((element) => {
-				element.addEventListener('click', (event) => {
-					this.toggleSelected(event.currentTarget as HTMLElement);
-				});
-			});
-		} else {
-			this.isPaymentSelected = true;
-		}
+        this.container.addEventListener('submit', (e: Event) => {
+            e.preventDefault();
+            this.events.emit(`${this.container.name}:submit`);
+        });
+    }
 
-		this.inputs.forEach((element) => {
-			element.addEventListener('input', (event) => {
-				this.showError(element);
-				this.updateValidation();
-			});
-		});
-	}
+    protected onInputChange(field: keyof T, value: string) {
+        this.events.emit(`${this.container.name}.${String(field)}:change`, {
+            field,
+            value
+        });
+    }
 
-	toggleSelected(button: HTMLElement) {
-		if (button.innerText == PAYMENT_METHOD.ONLINE) {
-			this.paymentMethod = PAYMENT_METHOD.ONLINE;
-		} else {
-			this.paymentMethod = PAYMENT_METHOD.RECEIVED;
-		}
-		const activeButton = this.container.querySelector('.button_alt-active');
-		if (activeButton) {
-			activeButton.classList.toggle('button_alt-active');
-		}
-		button.classList.toggle('button_alt-active');
+    set valid(value: boolean) {
+        this._submit.disabled = !value;
+    }
 
-		this.isPaymentSelected = true;
-		this.updateValidation();
-	}
+    set errors(value: string) {
+        this.setText(this._errors, value);
+    }
 
-	updateValidation() {
-		let isValidInputs = true;
-		this.inputs.forEach((element: HTMLInputElement) => {
-			if (element.value === '' || element.validity.valid !== true) {
-				isValidInputs = false;
-			}
-		});
-
-		if (isValidInputs && this.isPaymentSelected) {
-			this.setDisabled(this.submit, false);
-		} else {
-			this.setDisabled(this.submit, true);
-		}
-	}
-
-	showError(element: HTMLInputElement) {
-		if (element.validity.valid) {
-			this.cleanError();
-		} else {
-			if (element.validity.patternMismatch) {
-				this.setText(this.error, element.dataset.errorMessage);
-			} else {
-				this.setText(this.error, element.validationMessage);
-			}
-			this.error.style.removeProperty('display');
-		}
-	}
-
-	cleanError() {
-		this.setText(this.error, '');
-		this.setHidden(this.error);
-	}
+    render(state: Partial<T> & IFormState) {
+        const {valid, errors, ...inputs} = state;
+        super.render({valid, errors});
+        Object.assign(this, inputs);
+        return this.container;
+    }
 }

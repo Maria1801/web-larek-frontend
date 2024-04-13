@@ -70,9 +70,9 @@ yarn build
 ### 2. Класс `Api`
 
 Этот класс предоставляет базовые методы для выполнения HTTP-запросов к внешнему API
+- `constructor(baseUrl: string, options: RequestInit = {})` Конструктор класса, принимающий базовый URL baseUrl и опции options для запросов. Устанавливает переданные значения в соответствующие поля класса.
 
 - Поля:
-
   - `baseUrl: string` - базовый URL API
   - `options: RequestInit` - опции для запроса
 
@@ -85,9 +85,8 @@ yarn build
 
 Абстрактный класс, принимает тип `T` данных описываемого компонента приложения. Сочетает в себе все основные методы для работы с DOM в дочерних компонентах.
 Нужен для стандартизации работы с DOM и избежания дублирования логики.
-
+- `protected constructor(protected readonly container: HTMLElement)` -  Конструктор класса, принимающий контейнер (родительский элемент) для размещения компонента. Устанавливает переданный контейнер в свойство container.
 - Методы:
-  - `protected constructor(protected readonly container: HTMLElement)` - устанавливает значение container
   - `toggleClass(element: HTMLElement, className: string, force?: boolean)` - Переключить класс
   - `protected setText(element: HTMLElement, value: unknown)` - Установить текстовое содержимое
   - `setDisabled(element: HTMLElement, state: boolean)` - Сменить статус блокировки
@@ -100,9 +99,8 @@ yarn build
 ### 4. Класс `Model<T>`
 
 Абстрактный класс, принимает тип `T` данных описываемой модели приложения. Базовая модель, чтобы можно было отличить ее от простых объектов с данными.
-
+- `constructor(data: Partial<T>, protected events: IEvents)` - Конструктор принимает два параметра: data - частичные данные типа T, которые будут присвоены модели при создании, и events - объект типа IEvents, используемый для управления событиями.
 - Методы:
-  - `constructor(data: Partial<T>, protected events: IEvents)` - устанавливает значение data
   - `emitChanges(event: string, payload?: object)` - Сообщить всем что модель поменялась
 
 
@@ -112,30 +110,40 @@ yarn build
 
 Это класс наследник `Model<IAppDataManager>`, который содержит основные данные приложения: каталог и корзина, отвечает за изменений этих
 данных. В нем всегда содержиться самая актуальная информация по данным, является первоисточником для всех остальных классов.
-
+- `constructor(events: IEvents)` -
+  Конструктор класса AppDataManager выполняет инициализацию объекта этого класса. Он принимает один аргумент `events`, который представляет собой интерфейс для управления событиями в приложении. Внутри конструктора устанавливаются начальные значения для полей `productList`, `basketList`, `order` и `formErrors`.
 - Поля:
   - `productList: IProduct[]` - Массив товаров
   - `basketList: IProduct[]` - Массив товаров, добавленных в корзину
-  - `addressForm: AddressForm` - Форма адреса
+  - `	order: IOrder = {
+    payment: '',
+    email: '',
+    phone: '',
+    address: '',
+    total: 0,
+    items: []
+    };` - Объект, содержащий информацию о заказе, включая метод оплаты, email, телефон, адрес доставки, общую стоимость заказа и список товаров
+  - `formErrors: FormErrors = {}` - Объект, содержащий информацию об ошибках ввода в форме.
 
 - Методы:
-
-  - `constructor(events: IEvents)` - создает хранилище с пустыми данными
   - `setProductList(productList: IProduct[]): void` - Метод установки продуктов
+  - `isProductInBasket(product: IProduct): boolean;` - проверяет продукт в корзине или нет
   - `addBasketProduct(product: IProduct): void;` - добавление продукта в корзину
   - `removeBasketProduct(product: IProduct): void` - удаление продукта из корзины
-  - `makeOrder(contactsForm: ContactsForm): IOrder` - Создает заказ на основе переданной формы контактов
+  - `makeOrder(): IOrder` - Создает заказ и возвращает его
+  - `isValidContactsForm(): boolean` - Проверяет, является ли форма контактных данных для заказа допустимой
+  - `isValidAddressForm(): boolean` -  Проверяет, является ли форма адреса для заказа допустимой
+  
 
 ### 2. Класс `LarekAPI`
 
 Класс наследуется от `Api` и предоставляет методы для взаимодействия с конкретным сервером проекта.
 Этот класс позволяет осуществлять взаимодействие с сервером, получать информацию о продуктах и отправлять заказы на сервер.
-Конструктор принимает URL сервера для контента и опциональные настройки для запросов.
-
+- `constructor(readonly baseUrl: string, options: RequestInit = {})` - Конструктор класса, принимающий базовый URL API (baseUrl) и дополнительные опции запроса (options). Устанавливает эти значения в соответствующие поля объекта. Вызывает конструктор родительского класса Api, передавая ему baseUrl и options.
 - Поля:
   - `baseUrl: string` - URL представляет базовый URL-адрес для API
+  - `options: RequestInit = {}` - объект типа RequestInit, содержащий дополнительные опции запроса.
 - Методы:
-  - `constructor(readonly baseUrl: string, options: RequestInit = {})` - вызывает конструктор родителя.
   - `productList(): Promise<ApiListResponse | void>` - возвращает список продуктов с сервера
   - `productItem(id: string): IProduct` - возвращает информацию о продукте с указанным идентификатором
   - `submitOrder(order: IOrder): Promise<ApiPostResponse | void>` - отправляет заказ на сервер и возвращает результат
@@ -152,8 +160,11 @@ yarn build
 export interface ICard {
 	product: IProduct;
 	handler: IClickHandler;
+	isAlreadyInBasket: boolean;
+	index: number;
 }
 ```
+- `constructor(container: HTMLElement)` - Конструктор класса, принимающий контейнер (родительский элемент) для создания карточки продукта. Вызывает конструктор родительского класса Component и инициализирует поля класса, находя соответствующие элементы внутри контейнера.
 
 - Поля:
   - `private _price: HTMLElement` - DOM элемент цены карточки
@@ -162,10 +173,12 @@ export interface ICard {
   - `private _img: HTMLImageElement` - DOM элемент картинки карточки
   - `private _btn: HTMLButtonElement` - DOM элемент кнопки карточки
   - `private _description: HTMLElement` - DOM элемент описания карточки
+  - `private _index: HTMLElement` - DOM элемент индекса карточки в корзине
 - Методы:
-  - `constructor(container: HTMLElement)` - задает все DOM элементы карточки из контейнера
   - `set product(product: IProduct)` - устанавливает все значения элементов
   - `set handler(handler: IClickHandler)` - устанавливает addEventListener на кнопку
+  - `set isAlreadyInBasket(flag: boolean)` - делает кнопку неактивной и устанавливает текст "Уже в корзине"
+  - `set index(i: number)` - устанавливает значение индекса в корзине
 
 ### 2. Класс `Basket`
 
@@ -178,35 +191,16 @@ export interface IBasket {
 	list: IProduct[];
 }
 ```
-
+- `constructor(container: HTMLElement, protected events: EventEmitter)` - Конструктор класса, принимающий контейнер (родительский элемент) для создания корзины и объект events типа EventEmitter для работы с событиями. Вызывает конструктор родительского класса Component и инициализирует поля класса, находя соответствующие элементы внутри контейнера. Добавляет слушатель события клика на кнопку для инициирования оформления заказа.
 - Поля:
   - `_list: HTMLElement` - DOM элемент списка корзины
   - `_price: HTMLElement` - DOM элемент для отображения общей стоимости товаров в корзине
   - `_button: HTMLButtonElement` - DOM элемент кнопки оформления заказа
 - Методы:
-  - `constructor(container: HTMLElement, protected events: EventEmitter)` - задает все DOM элементы корзины из контейнера, делает кнопку неактивной и устанавливает addEventListener 
   - `set list(productList: IProduct[])` - обновляет список товаров в корзине
   - `set price(productList: IProduct[])` - обновляет итоговую стоимость товаров в корзине
 
-### 3. Класс `FormFinal`
-
-Класс наследник `Component<IFormFinal>` представляет содержимое модального окна финальной формы заказа.
-
-Данные для отображения:
-```
-export interface IFormFinal{
-	total: number
-}
-```
-- Поля:
-  - `_close: HTMLElement` - DOM элемент кнопки закрытия
-  - `_total: HTMLElement` - DOM элемент финальной стоимости товаров
-- Методы:
-  - `constructor(container: HTMLElement, onClick: IClickHandler)` - задает все DOM элементы финальной формы из контейнера и устанавливает addEventListener
-  - `set total(value: number)` - обновляет финальную стоимость
-
-
-### 4. Класс `MainPage`
+### 3. Класс `MainPage`
 
 Класс наследник `Component<IMainPage>` представляет содержимое главной страницы.
 
@@ -217,16 +211,63 @@ export interface IMainPage {
 	catalog: IProduct[];
 }
 ```
-
+- `constructor(container: HTMLElement, protected events: IEvents)` - Конструктор класса, принимающий контейнер (родительский элемент) для создания главной страницы и объект events типа IEvents для работы с событиями. Вызывает конструктор родительского класса Component и инициализирует поля класса, находя соответствующие элементы внутри контейнера. Добавляет слушатель события клика на корзину для отображения содержимого корзины.
 - Поля:
   - `_catalog: HTMLElement` - DOM элемент списка товаров
   - `_counter: HTMLElement` - DOM элемент счетка товаров карзины
+  - `_wrapper: HTMLElement` - DOM элемент для блокировки модального окна
 - Методы:
-  - `constructor(container: HTMLElement, protected events: IEvents)` - задает все DOM элементы страницы из контейнера и устанавливает addEventListener
   - `set catalog(productList: IProduct[])` - обновляет список товаров
   - `set counter(count: number)` - обновляет счетчик
+  - `set locked(value: boolean)` - блокирует прокрутку для модального окна
+
+### 4. Класс `ContactsForm`
+Класс  представляет собой форму для ввода контактной информации, наследуемую от класса Form.
+Данные для отображения:
+```
+export interface IContactsForm {
+    phone?: string;
+    email?: string;
+}
+```
+- `constructor(container: HTMLFormElement, protected events: IEvents)` - Принимает контейнер формы (container) и объект событий (events). Вызывает конструктор родительского класса Form, передавая ему эти аргументы.
+- Сеттеры `phone(value: string)` и `email(value: string)`: Позволяют устанавливать значения для соответствующих полей формы "телефон" и "email". Они используют метод namedItem для получения элемента формы по его имени и устанавливают значение введенного текста.
+ 
+- Методы:
+  - ` checkErrors(order: IOrder)` - Проверяет наличие ошибок в заполнении формы
 
 
+### 5. Класс `OrderForm`
+Класс OrderForm представляет форму заказа, наследуя функциональность базового класса Form
+Данные для отображения:
+```
+export interface AddressForm {
+	payment: string;
+	address: string;
+}
+```
+- `constructor(container: HTMLFormElement, protected events: IEvents)` - Конструктор принимает контейнер формы и объект событий. Он вызывает конструктор родительского класса Form, передавая ему эти аргументы.
+
+- Методы:
+  - ` payment(name: string))` - устанавливает выбранный способ оплаты путем добавления или удаления
+  - ` address(value: string)` - устанавливает адресс
+  - ` checkErrors(order: IOrder))` - Проверяет наличие ошибок в заполнении формы
+
+### 6. Класс `Success` 
+Класс наследник Component представляет содержимое модального окна финальной формы заказа.
+```
+interface ISuccess {
+	total: string;
+}
+```
+- `constructor(container: HTMLElement, actions: IClickHandler)` - задает все DOM элементы финальной формы из контейнера и устанавливает addEventListener
+- Поля:
+- `_close: HTMLElement` - DOM элемент кнопки закрытия
+- `_total: HTMLElement` - DOM элемент финальной стоимости товаров
+- Методы:
+  - `set total(value: number)` - обновляет финальную стоимость
+
+  
 ## Общие классы представления
 
 ### 1. Класс `Modal`
@@ -240,12 +281,11 @@ export interface IModal {
 	content: HTMLElement;
 }
 ```
-
+- `constructor(container: HTMLElement, protected events: IEvents)` - Конструктор класса, принимающий контейнер (родительский элемент) для создания модального окна и объект events типа IEvents для работы с событиями. Вызывает конструктор родительского класса Component и инициализирует поля класса, находя соответствующие элементы внутри контейнера. Устанавливает обработчики событий для кнопки закрытия модального окна и для области вне контента модального окна.
 - Поля:
   - `closeBtn: HTMLButtonElement` -  DOM элемент кнопка закрытия модального окна.
   - `_content: HTMLElement` -  DOM элемент содержимое модального окна
 - Методы:
-  - `constructor(container: HTMLElement, protected events: IEvents)` - задает все DOM элементы страницы из контейнера и устанавливает addEventListener для кнопок закрытия
   - `set content(container: HTMLElement)` - устанавливает содержимое модального окна
   - `showModal()` - отображает модальное окно
   - `hideModal()` - скрывает модальное окно
@@ -255,20 +295,16 @@ export interface IModal {
 ### 2. Класс `Form`
 
 Класс наследник `Component<IForm>` представляет форму в приложении и обеспечивает взаимодействие с ней.
+- `constructor(container: HTMLElement, protected events: IEvents)` - Конструктор класса, принимающий контейнер формы (container) и объект events типа IEvents для работы с событиями. Вызывает конструктор родительского класса Component и инициализирует поля класса, находя соответствующие элементы внутри контейнера формы. Добавляет обработчики событий для изменения значений в полях формы (input) и отправки формы (submit).
 
 - Поля:
-  - `error: HTMLElement` -  DOM элемент сообщения об ошибке
-  - `isPaymentSelected: boolean` - выбран ли способ оплаты
-  - `inputs: HTMLInputElement[]` - массив  DOM элементов инпутов формы
-  - `paymentButtons: HTMLElement[]` -  DOM элементы кнопок выбора метода оплаты
-  - `submit: HTMLButtonElement` -  DOM элемент кнопки подтверждения формы
-  - `paymentMethod: PAYMENT_METHOD` - значение способа оплаты
+  - ` _submit: HTMLButtonElement` - кнопка отправки формы
+  - ` _errors: HTMLElement` - контейнер для вывода ошибок в форме
 - Методы:
-  - `constructor(container: HTMLElement, protected events: IEvents)` - задает все DOM элементы формы из контейнера и устанавливает нужный addEventListener для кнопок, сбрасывает ошибки инпутов
-  - `toggleSelected(button: HTMLElement)` - переключает выбранное состояние кнопки выбора способа оплаты
-  - `updateValidation()` - обновляет состояние кнопки отправки формы в зависимости от заполнения формы и выбора способа оплаты
-  - `showError(element: HTMLInputElement)` - показывает сообщение об ошибке для конкретного поля ввода
-  - `cleanError():` - метод который очищает сообщение об ошибке
+  - `onInputChange(field: keyof T, value: string)` - Метод для обработки события изменения значения в полях формы
+  - `set valid(value: boolean)` -Метод для установки состояния доступности кнопки отправки формы
+  - `set errors(value: string)` - Метод для установки сообщения об ошибке в форме.
+  - `render(state: Partial<T> & IFormState)` - Метод для рендеринга формы с заданным состоянием
 
 
 ## События изменения внутреннего состояния
@@ -288,6 +324,10 @@ export interface IModal {
 `order:contacts` - следующий этап покупки: открываем форму с контактными данными.
 
 `order:post` - финальный этап покупки: собираем все данные по заказу, отправляем их на сервер и открываем финальное модальное окно.
+
+`modal:open` - открыть модальное окно и заблокировать прокрутку страницы
+
+`modal:close` - закрыть модальное окно и раззаблокировать прокрутку страницы
 
 
 ## Типы
@@ -315,13 +355,15 @@ export interface IForm {
 	cleanError(): void;
 }
 
+export type ProductPrice = number | null;
+
 export interface IProduct {
 	id: string;
 	description: string;
 	image: string;
 	title: string;
 	category: string;
-	price: number;
+	price: ProductPrice;
 }
 
 export interface IOrder {

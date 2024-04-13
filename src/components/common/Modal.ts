@@ -1,3 +1,4 @@
+import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/component';
 import { IEvents } from '../base/events';
 
@@ -11,12 +12,9 @@ export class Modal extends Component<IModal> {
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this.closeBtn = container.getElementsByClassName(
-			'modal__close'
-		)[0] as HTMLButtonElement;
-		this._content = container.getElementsByClassName(
-			'modal__content'
-		)[0] as HTMLElement;
+
+		this.closeBtn = ensureElement<HTMLButtonElement>('.modal__close', container); 
+        this._content = ensureElement<HTMLElement>('.modal__content', container); 
 
 		this.closeBtn.addEventListener('click', this.hideModal.bind(this));
 		this.container.addEventListener('click', this.hideModal.bind(this));
@@ -29,12 +27,12 @@ export class Modal extends Component<IModal> {
 
 	showModal() {
 		this.container.classList.add('modal_active');
-		document.body.classList.add('page__wrapper_locked');
+		this.events.emit('modal:open');
 	}
 	hideModal() {
 		this.container.classList.remove('modal_active');
 		this._content.replaceChildren(null);
-		document.body.classList.remove('page__wrapper_locked');
+        this.events.emit('modal:close');
 	}
 
 	render(content: IModal) {

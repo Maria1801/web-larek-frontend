@@ -1,4 +1,4 @@
-import { IProduct, IOrder, AddressForm, ContactsForm } from '../types';
+import { IProduct, IOrder, ContactsForm, FormErrors } from '../types';
 import { IEvents } from './base/events';
 import { Model } from './base/model';
 
@@ -9,12 +9,21 @@ export interface IAppDataManager {
 	addBasketProduct(product: IProduct): void;
 	removeBasketProduct(product: IProduct): void;
 	makeOrder(contactsForm: ContactsForm): IOrder;
+	isProductInBasket(product: IProduct):boolean;
 }
 
 export class AppDataManager extends Model<IAppDataManager> {
 	productList: IProduct[];
 	basketList: IProduct[];
-	addressForm: AddressForm;
+	order: IOrder = {
+		payment: '',
+		email: '',
+		phone: '',
+		address: '',
+		total: 0,
+		items: []
+	};
+	formErrors: FormErrors = {};
 
 	constructor(events: IEvents) {
 		super(
@@ -31,8 +40,12 @@ export class AppDataManager extends Model<IAppDataManager> {
 		this.emitChanges('productList:changed', { productList: this.productList });
 	}
 
+	isProductInBasket(product: IProduct): boolean {
+		return this.basketList.includes(product);
+	}
+
 	addBasketProduct(product: IProduct) {
-		if (!this.basketList.includes(product)) {
+		if (!this.isProductInBasket(product)) {
 			this.basketList.push(product);
 		}
 	}
@@ -44,25 +57,30 @@ export class AppDataManager extends Model<IAppDataManager> {
 		}
 	}
 
-	makeOrder(contactsForm: ContactsForm): IOrder {
-		var totalAmount = 0;
-		this.basketList.map((product: IProduct) => {
-			totalAmount += product.price;
+	makeOrder(): IOrder {
+		this.order.items = this.basketList.map((product: IProduct) => {
+			this.order.total += product.price;
+			return product.id;
 		});
-		const order = {
-			payment: String(this.addressForm.payment),
-			email: contactsForm.email,
-			phone: contactsForm.telephone,
-			address: this.addressForm.address,
-			total: totalAmount,
-			items: this.basketList.map((product: IProduct) => {
-				return product.id;
-			}),
+		const orderReturn = this.order;
+		this.basketList = [];
+		this.order = {
+			payment: '',
+			email: '',
+			phone: '',
+			address: '',
+			total: 0,
+			items: []
 		};
 
-		this.addressForm = null;
-		this.basketList = [];
+		return orderReturn;
+	}
 
-		return order;
+	isValidContactsForm(): boolean {
+		return (this.order.address !== '' && this.order.payment !== '') ? true : false;
+	}
+
+	isValidAddressForm(): boolean {
+		return (this.order.email !== '' && this.order.phone !== '') ? true : false;
 	}
 }
