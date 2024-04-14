@@ -50,10 +50,10 @@ export class MainPage extends Component<IMainPage> {
 	}
 
 	set locked(value: boolean) {
-        if (value) {
-            this._wrapper.classList.add('page__wrapper_locked');
-        } else {
-            this._wrapper.classList.remove('page__wrapper_locked');
-        }
-    }
+		if (value) {
+			this.toggleClass(this._wrapper, 'page__wrapper_locked', true);
+		} else {
+			this.toggleClass(this._wrapper, 'page__wrapper_locked', false);
+		}
+	}
 }

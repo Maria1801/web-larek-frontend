@@ -161,6 +161,7 @@ export interface ICard {
 	product: IProduct;
 	handler: IClickHandler;
 	isAlreadyInBasket: boolean;
+  isNullPrice: boolean;
 	index: number;
 }
 ```
@@ -179,6 +180,8 @@ export interface ICard {
   - `set handler(handler: IClickHandler)` - устанавливает addEventListener на кнопку
   - `set isAlreadyInBasket(flag: boolean)` - делает кнопку неактивной и устанавливает текст "Уже в корзине"
   - `set index(i: number)` - устанавливает значение индекса в корзине
+  - `set isNullPrice(flag: boolean)` - делает кнопку неактивной и устанавливает текст "Нельзя купить"
+
 
 ### 2. Класс `Basket`
 

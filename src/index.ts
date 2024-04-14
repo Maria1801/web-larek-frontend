@@ -52,6 +52,7 @@ events.on('card:select', (product: IProduct) => {
 		content: selectedCard.render({
 			product: product,
 			isAlreadyInBasket: appDataManager.isProductInBasket(product),
+			isNullPrice: product.price==null,
 			handler: {
 				onClick: () => {
 					modal.hideModal();

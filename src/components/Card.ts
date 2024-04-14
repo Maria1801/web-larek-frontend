@@ -7,6 +7,7 @@ export interface ICard {
 	product: IProduct;
 	handler: IClickHandler;
 	isAlreadyInBasket: boolean;
+	isNullPrice: boolean;
 	index: number;
 }
 
@@ -63,13 +64,20 @@ export class Card extends Component<ICard> {
 	}
 
 	set isAlreadyInBasket(flag: boolean) {
-		if (flag){
+		if (flag) {
 			this.setDisabled(this._btn, true);
-			this.setText(this._btn, "Уже в корзине");
+			this.setText(this._btn, 'Уже в корзине');
+		}
+	}
+
+	set isNullPrice(flag: boolean) {
+		if (flag) {
+			this.setDisabled(this._btn, true);
+			this.setText(this._btn, 'Нельзя купить');
 		}
 	}
 
 	set index(i: number) {
-		this.setText(this._index, i)
+		this.setText(this._index, i);
 	}
 }
